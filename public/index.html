@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>PPFN-Unblocker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=all" />
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/ppfn-official/ppfn/refs/heads/MAIN/ppfn.png" type="image/png">
+    <script src="/baremux/index.js"></script>
+<script src="/uv/uv.bundle.js"></script>
+<script src="/uv/uv.config.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/uv/sw.js");
+    });
+}
+</script>
+</head>
+<body>
+    <div id="nav">
+        <img id="logo" src="https://raw.githubusercontent.com/ppfn-official/ppfn/refs/heads/MAIN/ppfn.png" alt="PPFN Logo"><b id="ppfn-txt">PPFN</b><p id="unblocker-txt">Unblocker</p>
+        <div id="back"><span class="material-symbols-outlined">
+arrow_back
+</span></div>
+        <div id="forward"><span class="material-symbols-outlined">
+arrow_forward
+</span></div>
+        <div autofocus="none" spellcheck="false" autocorrect="off" autocapitalize="off" aria-autocomplete="none" id="url" contenteditable="true"></div>
+        <div id="open_new"><span class="material-symbols-outlined">
+open_in_new
+</span></div>
+        <div id="settings" style="padding-right: 10px;">
+            <span class="material-symbols-outlined">
+settings
+</span>
+        </div>
+    <!-- Settings Popup -->
+    <div id="settings-popup" class="hidden">
+        <div id="settings-panel">
+            <span id="close-settings" class="material-symbols-outlined">close</span>
+            <h2>Settings</h2>
+            <div>
+                <!-- Add your settings options here -->
+                 <button onclick="updateUrlBarFromLocation();">refresh</button>
+                <p>Settings panel content goes here.</p>
+            </div>
+        </div>
+        <div id="settings-overlay"></div>
+    </div>
+    </div>
+    
+    <div id="content">
+    <div id="loading-spinner" style="display:none;position:absolute;z-index:2000;top:50%;left:50%;transform:translate(-50%,-50%);">
+        <svg width="60" height="60" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="20" fill="none" stroke="#c9c9eb" stroke-width="5" stroke-linecap="round" stroke-dasharray="31.4 31.4" transform="rotate(-90 25 25)">
+                <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
+            </circle>
+        </svg>
+    </div>
+    <iframe id="site-frame" style="width:100vw; height:95vh; border:none; background:rgb(28,28,37);"></iframe>
+</div>
+</body>
+</html>
+<script>
+function updateUrlBarFromLocation() {
+    const urlDiv = document.getElementById('url');
+    if (!urlDiv) return;
+    let hash = window.location.hash.slice(1);
+    if (!hash) {
+        urlDiv.textContent = "";
+        return;
+    }
+    try {
+        // Decode the hash (which is encodeURIComponent of the real URL)
+        const decoded = decodeURIComponent(hash);
+        urlDiv.textContent = decoded;
+    } catch (e) {
+        urlDiv.textContent = hash;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.baremuxConnection = null;
+
+    const urlDiv = document.getElementById('url');
+    const iframe = document.getElementById('site-frame');
+    const backBtn = document.getElementById('back');
+    const forwardBtn = document.getElementById('forward');
+    const openNewBtn = document.getElementById('open_new');
+    const loadingSpinner = document.getElementById('loading-spinner');
+
+    // Show spinner when navigating
+    function showSpinner() {
+        loadingSpinner.style.display = 'block';
+    }
+    function hideSpinner() {
+        loadingSpinner.style.display = 'none';
+    }
+
+    // Show spinner when iframe src changes
+    const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src').set;
+    Object.defineProperty(iframe, 'src', {
+        set(value) {
+            showSpinner();
+            originalSetSrc.call(this, value);
+        }
+    });
+
+    // Hide spinner when iframe DOM is loaded (via Ultraviolet's postMessage)
+    window.addEventListener('message', (event) => {
+        if (event.source !== iframe.contentWindow) return;
+        if (event.data && event.data.type === 'uv-dom-ready') {
+            hideSpinner();
+        }
+    });
+
+    // Fallback: hide spinner on iframe load (in case postMessage missed)
+    iframe.addEventListener('load', () => {
+        setTimeout(hideSpinner, 500); // Give UV time to send dom-ready
+    });
+
+    if (urlDiv) {
+        urlDiv.addEventListener('input', function() {
+            if (window.DOMPurify) {
+                const clean = DOMPurify.sanitize(urlDiv.innerHTML, {ALLOWED_TAGS: [], ALLOWED_ATTR: []});
+                if (urlDiv.innerHTML !== clean) {
+                    urlDiv.innerHTML = clean;
+                }
+            }
+        });
+
+        // Load page on Enter
+        urlDiv.addEventListener('keydown', async function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                urlDiv.blur(); // Unfocus the URL bar
+                const rawUrl = urlDiv.textContent.trim();
+                let url = rawUrl;
+                if (!url.includes(".")) {
+                    url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+                } else if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    url = "https://" + url;
+                }
+                window.location.hash = encodeURIComponent(url);
+
+                // Ensure BareMux transport is set
+                if (!window.baremuxConnection) {
+                    window.baremuxConnection = new BareMux.BareMuxConnection("/baremux/worker.js");
+                    const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+                    await window.baremuxConnection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+                }
+                document.getElementById('site-frame').src = __uv$config.prefix + __uv$config.encodeUrl(url);
+            }
+        });
+    }
+
+
+    const settingsBtn = document.getElementById('settings');
+    const settingsPopup = document.getElementById('settings-popup');
+    const closeSettings = document.getElementById('close-settings');
+    const overlay = document.getElementById('settings-overlay');
+
+    if (settingsBtn && settingsPopup && closeSettings && overlay) {
+        settingsBtn.addEventListener('click', () => {
+            settingsPopup.classList.remove('hidden');
+        });
+        closeSettings.addEventListener('click', () => {
+            settingsPopup.classList.add('hidden');
+        });
+        overlay.addEventListener('click', () => {
+            settingsPopup.classList.add('hidden');
+        });
+    }
+
+    // Navigation buttons for iframe history
+    if (backBtn) {
+
+        backBtn.addEventListener('click', function() {
+            window.history.back();
+        });
+    }
+    if (forwardBtn) {
+        forwardBtn.addEventListener('click', function() {
+            window.history.forward();
+        });
+    }
+    if (openNewBtn) {
+        openNewBtn.addEventListener('click', async function() {
+            // Get the current URL from the URL bar
+            const rawUrl = urlDiv.textContent.trim();
+            let url = rawUrl;
+            if (!url.includes(".")) {
+                url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+            } else if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://" + url;
+            }
+            // Open the proxied URL in a new tab (fullscreen, no iframe)
+            const proxiedUrl = __uv$config.prefix + __uv$config.encodeUrl(url);
+            window.open(proxiedUrl, '_blank');
+        });
+    }
+
+    // Update URL bar on load and when hash changes
+    updateUrlBarFromLocation();
+    window.addEventListener('hashchange', updateUrlBarFromLocation);
+
+    // Listen for UV navigation events from the iframe
+    window.addEventListener('message', (event) => {
+        if (event.source !== iframe.contentWindow) return;
+        if (event.data && event.data.type === 'uv-location' && event.data.location) {
+            // Decode the proxied URL
+            try {
+                const realUrl = __uv$config.decodeUrl(event.data.location.replace(__uv$config.prefix, ""));
+                urlDiv.textContent = realUrl;
+            } catch (e) {
+                urlDiv.textContent = event.data.location;
+            }
+        }
+    });
+});
+</script>
+<style>
+    #logo{
+    height: 80%;
+    padding-left: 10px;
+}
+body{
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: none;
+    background-color: rgb(28, 28, 37);
+}
+#nav{
+    width: 100vw;
+    height: 6vh;
+    background-color: rgb(25, 25, 54);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 17px;
+    overflow: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+#ppfn-txt{
+    font-size: 4vh;
+    padding-top: 100%;
+    padding-bottom: 100%;
+    user-select: none;
+}
+#unblocker-txt{
+    font-size: 2.5vh;
+    user-select: none;
+
+}
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {#ppfn-txt, #unblocker-txt{
+    display: none;
+}}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {#ppfn-txt, #unblocker-txt{
+    display: none;
+}}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {#ppfn-txt{
+    display: none;
+}
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {#ppfn-txt, #unblocker-txt{
+    display: inherit;
+}}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {#ppfn-txt, #unblocker-txt{
+    display: inherit;
+}}
+#url{
+    height: 50%;
+    background-color: rgb(76, 76, 102);
+    width: 100%;
+    border-radius: 100000px;
+    display: flex;
+    align-items: center;
+    padding-right: 5px;
+    padding-left: 5px;
+    outline: none;
+    overflow-x: scroll;
+    border: solid;
+    border-width: 5px;
+    border-color: rgb(76, 76, 102);
+    font-size: 12pt;
+    color: rgb(201, 201, 235);
+    justify-content: left;
+    overflow: hidden;
+}
+.material-symbols-outlined{
+    
+    border-radius: 100px;
+    padding: 20%;
+    cursor: pointer;
+    scale: 1;
+    color: rgb(201, 201, 235);
+}
+.material-symbols-outlined:hover{
+    
+    border-radius: 100px;
+    padding: 20%;
+    cursor: pointer;
+    scale: 1;
+    color: rgb(201, 201, 235);
+    background-color: rgb(45, 45, 61);
+}
+#settings-popup.hidden {
+    display: none;
+}
+#settings-popup {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#settings-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1;
+}
+#settings-panel {
+    position: relative;
+    z-index: 2;
+    background: rgb(25, 25, 54);
+    color: rgb(201, 201, 235);
+    border-radius: 16px;
+    padding: 32px 24px 24px 24px;
+    min-width: 320px;
+    min-height: 200px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+#close-settings {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    cursor: pointer;
+    background: none;
+    padding: 0;
+    font-size: 28px;
+}
+#content{
+    width: 100vw;
+    height: 94vh;
+    background-color: rgb(28, 28, 37);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    overflow: none;
+}
+div{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#loading-spinner {
+    background: rgba(28,28,37,0.7);
+    border-radius: 50%;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
