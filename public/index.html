@@ -21,6 +21,12 @@ if ("serviceWorker" in navigator) {
 <body>
     <div id="nav">
         <img id="logo" src="https://raw.githubusercontent.com/ppfn-official/ppfn/refs/heads/MAIN/ppfn.png" alt="PPFN Logo"><b id="ppfn-txt">PPFN</b><p id="unblocker-txt">Unblocker</p>
+        <div id="home"><span class="material-symbols-outlined">
+home
+</span></div>
+<div id="reload"><span class="material-symbols-outlined">
+refresh
+</span></div>
         <div id="back"><span class="material-symbols-outlined">
 arrow_back
 </span></div>
@@ -69,6 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const backBtn = document.getElementById('back');
     const forwardBtn = document.getElementById('forward');
     const openNewBtn = document.getElementById('open_new');
+    const reloadBtn = document.getElementById('reload');
+    const homeBtn = document.getElementById('home');
     const loadingSpinner = document.getElementById('loading-spinner');
 
     // Show spinner when navigating
@@ -177,6 +185,18 @@ Object.defineProperty(iframe, 'src', {
                 urlDiv.blur(); // Unfocus the URL bar
                 const rawUrl = urlDiv.textContent.trim();
                 let url = rawUrl;
+
+                // Check for ppfn:// prefix
+                if (url.startsWith("ppfn://")) {
+                    const pageName = url.slice("ppfn://".length).trim();
+                    if (pageName) {
+                        // Sanitize pageName to prevent directory traversal
+                        const safePageName = pageName.replace(/[^a-zA-Z0-9_-]/g, "");
+                        iframe.src = `/ppfn-pages/${safePageName}.html`;
+                    }
+                    return;
+                }
+
                 if (!url.includes(".")) {
                     url = "https://duckduckgo.com/?q=" + encodeURIComponent(url) + "&ia=web";
                 } else if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -229,6 +249,17 @@ Object.defineProperty(iframe, 'src', {
             window.history.forward();
         });
     }
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function() {
+            urlDiv.textContent = "ppfn://home";
+            iframe.src = `${window.location}/ppfn-pages/home.html`;
+        });
+    }
+    if (reloadBtn) {
+        reloadBtn.addEventListener('click', function() {
+            iframe.contentWindow.location.reload();
+        });
+    }
     if (openNewBtn) {
         openNewBtn.addEventListener('click', async function() {
             // Get the current URL from the URL bar
@@ -252,6 +283,12 @@ Object.defineProperty(iframe, 'src', {
         if (iframe.src !== newSrc) {
             iframe.src = newSrc;
         }
+        if (iframe.src === "about:blank" || iframe.src === "" || iframe.src === undefined || iframe.src === null || iframe.src === "data:text/html,about:blank") {
+                    urlDiv.textContent = "ppfn://home";
+                    iframe.src = `${window.location}/ppfn-pages/home.html`;
+                    urlDiv.blur(); // Unfocus the URL bar
+        }
+
 
 });
 function resetOverflowPosition(element) {
@@ -342,8 +379,6 @@ body{
     font-size: 2vh;
     color: rgb(201, 201, 235);
     justify-content: left;
-    overflow: hidden;
-     overflow-x: scroll;
      line-break: none;
      white-space: nowrap;
      text-overflow: ellipsis;
