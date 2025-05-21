@@ -2,8 +2,15 @@
 
 self.__uv$config = {
     prefix: "/uv/service/",
-    encodeUrl: Ultraviolet.codec.xor.encode,
-    decodeUrl: Ultraviolet.codec.xor.decode,
+    // Custom encode/decode functions using encodeURIComponent/decodeURIComponent and base64
+    encodeUrl: function(url) {
+        // First encode URI components, then base64 encode for obfuscation
+        return btoa(encodeURIComponent(url));
+    },
+    decodeUrl: function(encoded) {
+
+            return decodeURIComponent(atob(encoded));
+    },
     handler: "/uv/uv.handler.js",
     client: "/uv/uv.client.js",
     bundle: "/uv/uv.bundle.js",

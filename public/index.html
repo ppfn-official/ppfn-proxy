@@ -27,7 +27,7 @@ arrow_back
         <div id="forward"><span class="material-symbols-outlined">
 arrow_forward
 </span></div>
-        <div autofocus="none" spellcheck="false" autocorrect="off" autocapitalize="off" aria-autocomplete="none" id="url" contenteditable="true"></div>
+        <div autofocus="none" onblur="resetOverflowPosition(this)"  spellcheck="false" autocorrect="off" autocapitalize="off" aria-autocomplete="none" id="url" contenteditable="true"></div>
         <div id="open_new"><span class="material-symbols-outlined">
 open_in_new
 </span></div>
@@ -40,11 +40,8 @@ settings
     <div id="settings-popup" class="hidden">
         <div id="settings-panel">
             <span id="close-settings" class="material-symbols-outlined">close</span>
-            <h2>Settings</h2>
             <div>
-                <!-- Add your settings options here -->
-                 <button onclick="updateUrlBarFromLocation();">refresh</button>
-                <p>Settings panel content goes here.</p>
+
             </div>
         </div>
         <div id="settings-overlay"></div>
@@ -64,23 +61,6 @@ settings
 </body>
 </html>
 <script>
-function updateUrlBarFromLocation() {
-    const urlDiv = document.getElementById('url');
-    if (!urlDiv) return;
-    let hash = window.location.hash.slice(1);
-    if (!hash) {
-        urlDiv.textContent = "";
-        return;
-    }
-    try {
-        // Decode the hash (which is encodeURIComponent of the real URL)
-        const decoded = decodeURIComponent(hash);
-        urlDiv.textContent = decoded;
-    } catch (e) {
-        urlDiv.textContent = hash;
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     window.baremuxConnection = null;
 
@@ -99,14 +79,21 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingSpinner.style.display = 'none';
     }
 
-    // Show spinner when iframe src changes
-    const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src').set;
-    Object.defineProperty(iframe, 'src', {
-        set(value) {
-            showSpinner();
-            originalSetSrc.call(this, value);
-        }
-    });
+// Save the original getter and setter
+const originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
+Object.defineProperty(iframe, 'src', {
+    get() {
+        // Call the original getter
+        return originalSrcDescriptor.get.call(this);
+    },
+    set(value) {
+        showSpinner();
+        // Call the original setter
+        originalSrcDescriptor.set.call(this, value);
+    },
+    configurable: true,
+    enumerable: true
+});
 
     // Hide spinner when iframe DOM is loaded (via Ultraviolet's postMessage)
     window.addEventListener('message', (event) => {
@@ -121,6 +108,58 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(hideSpinner, 500); // Give UV time to send dom-ready
     });
 
+    iframe.addEventListener('load', () => {
+    try {
+        // Access the iframe's current location
+        const newSrc = iframe.contentWindow.location.href;
+
+        // Update the iframe's src attribute if it has changed
+        if (iframe.src !== newSrc) {
+            iframe.src = newSrc;
+        }
+    } catch (e) {
+        console.error("Error accessing iframe location:", e);
+    }
+});
+    // --- BEGIN: Periodically update URL bar from iframe ---
+    let urlBarFocused = false;
+    if (urlDiv) {
+        urlDiv.addEventListener('focus', () => { urlBarFocused = true; });
+        urlDiv.addEventListener('blur', () => { urlBarFocused = false; });
+    }
+
+    setInterval(() => {
+        if (urlBarFocused) return;
+        try {
+            // Get iframe src
+            let src = iframe.src;
+            // Find the /uv/service/ part
+            const prefix = __uv$config && __uv$config.prefix ? __uv$config.prefix : "/uv/service/";
+            const idx = src.indexOf(prefix);
+            if (idx !== -1) {
+                // Get the encoded part after /uv/service/
+                let encoded = src.slice(idx + prefix.length);
+                // Remove any trailing slashes or query/hash
+                encoded = encoded.split(/[/?#]/)[0];
+                if (encoded) {
+                    // Decode using decodeURIComponent(atob(encoded))
+                    let decoded;
+                    try {
+                        decoded = decodeURIComponent(atob(encoded));
+                    } catch (e) {
+                        decoded = '';
+                    }
+                    // Only update if different
+                    if (urlDiv.textContent !== decoded) {
+                        urlDiv.textContent = decoded;
+                    }
+                }
+            }
+        } catch (e) {
+        }
+    }, 500);
+    // --- END: Periodically update URL bar from iframe ---
+// great white whales just rlease
     if (urlDiv) {
         urlDiv.addEventListener('input', function() {
             if (window.DOMPurify) {
@@ -131,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Load page on Enter
+        // L/ Ignore errorsoad page on Enter
         urlDiv.addEventListener('keydown', async function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
@@ -139,11 +178,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const rawUrl = urlDiv.textContent.trim();
                 let url = rawUrl;
                 if (!url.includes(".")) {
-                    url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+                    url = "https://www.duckduckgo.com/search?q=" + encodeURIComponent(url);
                 } else if (!url.startsWith("http://") && !url.startsWith("https://")) {
                     url = "https://" + url;
                 }
-                window.location.hash = encodeURIComponent(url);
 
                 // Ensure BareMux transport is set
                 if (!window.baremuxConnection) {
@@ -151,7 +189,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
                     await window.baremuxConnection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
                 }
-                document.getElementById('site-frame').src = __uv$config.prefix + __uv$config.encodeUrl(url);
+                try {
+                    const encodedUrl = __uv$config.encodeUrl(url);
+                    iframe.src = __uv$config.prefix + encodedUrl;
+                } catch (e) {
+                    console.error("Error encoding URL:", e);
+                }
             }
         });
     }
@@ -201,25 +244,19 @@ document.addEventListener('DOMContentLoaded', function() {
             window.open(proxiedUrl, '_blank');
         });
     }
+    
+        // Access the iframe's current location
+        const newSrc = iframe.contentWindow.location.href;
 
-    // Update URL bar on load and when hash changes
-    updateUrlBarFromLocation();
-    window.addEventListener('hashchange', updateUrlBarFromLocation);
-
-    // Listen for UV navigation events from the iframe
-    window.addEventListener('message', (event) => {
-        if (event.source !== iframe.contentWindow) return;
-        if (event.data && event.data.type === 'uv-location' && event.data.location) {
-            // Decode the proxied URL
-            try {
-                const realUrl = __uv$config.decodeUrl(event.data.location.replace(__uv$config.prefix, ""));
-                urlDiv.textContent = realUrl;
-            } catch (e) {
-                urlDiv.textContent = event.data.location;
-            }
+        // Update the iframe's src attribute if it has changed
+        if (iframe.src !== newSrc) {
+            iframe.src = newSrc;
         }
-    });
+
 });
+function resetOverflowPosition(element) {
+  element.scrollLeft = 0;
+}
 </script>
 <style>
     #logo{
@@ -250,6 +287,7 @@ body{
     top: 0;
     left: 0;
     z-index: 100;
+   
 }
 #ppfn-txt{
     font-size: 4vh;
@@ -301,10 +339,17 @@ body{
     border: solid;
     border-width: 5px;
     border-color: rgb(76, 76, 102);
-    font-size: 12pt;
+    font-size: 2vh;
     color: rgb(201, 201, 235);
     justify-content: left;
     overflow: hidden;
+     overflow-x: scroll;
+     line-break: none;
+     white-space: nowrap;
+     text-overflow: ellipsis;
+      user-select: all;
+    -moz-user-select: all;
+    -webkit-user-select: all;
 }
 .material-symbols-outlined{
     
@@ -313,6 +358,7 @@ body{
     cursor: pointer;
     scale: 1;
     color: rgb(201, 201, 235);
+    font-size: 3vh;
 }
 .material-symbols-outlined:hover{
     
@@ -325,6 +371,13 @@ body{
 }
 #settings-popup.hidden {
     display: none;
+}
+#url {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+#url::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
 }
 #settings-popup {
     position: fixed;
@@ -349,6 +402,8 @@ body{
     padding: 32px 24px 24px 24px;
     min-width: 320px;
     min-height: 200px;
+    width: 80vw;
+    height: 80vh;
     box-shadow: 0 4px 32px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
@@ -361,7 +416,7 @@ body{
     cursor: pointer;
     background: none;
     padding: 0;
-    font-size: 28px;
+    font-size: 3vh;
 }
 #content{
     width: 100vw;
