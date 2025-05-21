@@ -1,0 +1,30 @@
+# Ignore everything
+/*
+
+# But NOT these files and folders:
+!.gitignore
+!package.json
+!pnpm-lock.yaml
+!server.js
+!public/
+!baremux/
+!uv/
+!epoxy/
+
+# If you have a src/ or config/ folder needed for the app, un-ignore them:
+#!src/
+#!config/
+
+# Allow all files inside public, baremux, uv, epoxy
+!public/**
+!baremux/**
+!uv/**
+!epoxy/**
+
+# Ignore node_modules and build artifacts
+node_modules/
+dist/
+build/
+.env
+.DS_Store
+*.log
