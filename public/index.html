@@ -166,6 +166,21 @@ Object.defineProperty(iframe, 'src', {
         } catch (e) {
         }
     }, 500);
+    if (urlDiv) {
+    urlDiv.addEventListener('mousedown', function(e) {
+        // Only select all if not already focused
+        if (document.activeElement !== urlDiv) {
+            e.preventDefault(); // Prevent default to avoid moving cursor
+            // Focus and select all
+            urlDiv.focus();
+            const range = document.createRange();
+            range.selectNodeContents(urlDiv);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    });
+}
     // --- END: Periodically update URL bar from iframe ---
 // great white whales just rlease
     if (urlDiv) {
@@ -337,6 +352,7 @@ body{
     user-select: none;
 
 }
+
 /* Extra small devices (phones, 600px and down) */
 @media only screen and (max-width: 600px) {#ppfn-txt, #unblocker-txt{
     display: none;
@@ -372,7 +388,7 @@ body{
     padding-right: 5px;
     padding-left: 5px;
     outline: none;
-    overflow-x: scroll;
+    overflow: hidden;
     border: solid;
     border-width: 5px;
     border-color: rgb(76, 76, 102);
@@ -382,9 +398,7 @@ body{
      line-break: none;
      white-space: nowrap;
      text-overflow: ellipsis;
-      user-select: all;
-    -moz-user-select: all;
-    -webkit-user-select: all;
+     cursor: text;
 }
 .material-symbols-outlined{
     
@@ -477,5 +491,10 @@ div{
     display: flex;
     align-items: center;
     justify-content: center;
+}
+#url.focused {
+    overflow-x: auto;
+    text-overflow: unset;
+    white-space: pre;
 }
 </style>

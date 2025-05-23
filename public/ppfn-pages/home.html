@@ -1,495 +1,219 @@
-
-
-
-
-<!--<!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-    <title>PPFN | Unblocker</title>
-    <link rel="icon" type="image/png" href="ppfn.png"> Cronitor RUM 
-<script async src="https://rum.cronitor.io/script.js"></script>
-<script>
-    window.cronitor = window.cronitor || function() { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
-    cronitor('config', { clientKey: '8b9ac14f693662c7e4489199bffaf6ae' });
-    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-        const lastVisit = localStorage.getItem('lastVisitDate');
-
-        if (lastVisit !== today) {
-            // If the last visit date is not today, track the viewer as unique
-            cronitor("track", "UniqueViewers");
-            localStorage.setItem('lastVisitDate', today); // Update the last visit date to today
-        }
-        const user = localStorage.getItem('user');
-
-        if (user != 1) {
-            // If the last visit date is not today, track the viewer as unique
-            cronitor("track", "AllTimeUniqueViewers");
-            localStorage.setItem('user', 1); // Update the last visit date to today
-        }
-</script>
-
- <script src="https://cdn.jsdelivr.net/npm/@simondmc/popup-js@1.4.2/popup.min.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=all" />
+  <title>Home</title>
 </head>
 <body>
-  
-    <h1 id="title">Recomended sites</h1>
-    <div id="searchdiv"><input type="text" name="search" id="search" placeholder="search"><span id="m" class="material-symbols-outlined">search</span></div>
-    <div id="tilecontainer">
+  <div class="container">
+    <div class="logo-title">
+      <img src="https://raw.githubusercontent.com/ppfn-official/ppfn/MAIN/ppfn.png" alt="PPFN Logo" class="logo">
+      <h1>PPFN Unblocker</h1>
+      <p class="subtitle">A fast, modern proxy for school & work</p>
     </div>
-    <button id="res" onclick="change()"></button>
-    <p>
-
-    </p>
+    <form id="search-form" autocomplete="off">
+      <div class="search-bar">
+        <input type="text" name="Search" id="q" placeholder="Search or enter a URL..." autofocus>
+        <button id="search" type="submit"><span class="material-symbols-outlined">search</span></button>
+      </div>
+    </form>
+    <div class="quick-links">
+      <span>Quick Links:</span>
+      <a href="#" id="google-link">Google</a>
+      <a href="#" id="youtube-link">YouTube</a>
+    </div>
+  </div>
 </body>
 </html>
-<script>
-    var gamelist = [ 
-  {
-    "link": "https://www.google.com/",
-    "imgSrc": "",
-    "title": "Google"
-  },
-];
-var ab = false;
-if (!localStorage.getItem('theme')) {
-    localStorage.setItem("theme", "1")
- }
-
- function change() {
-   if (localStorage.getItem('theme') == '1') {
-     localStorage.setItem("theme", '0')
-     themeToggle("light");
-   } else {
-     localStorage.setItem("theme", '1')
-     themeToggle("dark");
-   }
- }
- function themeToggle(sigma){
-   let root = document.documentElement;
-   if(sigma == "light"){
-       root.style.setProperty("--back", "rgb(230, 230, 230)");
-       root.style.setProperty("--font", "black");
-       root.style.setProperty("--tile", "rgb(210, 210, 210)");
-       document.getElementById("res").innerHTML= "<span id='g' class='material-symbols-outlined'>dark_mode</span>";
-       root.style.setProperty("--res", "rgb(56, 56, 56)");
-       root.style.setProperty("--themeicon", "white");
-       root.style.setProperty("--grid", "rgb(189, 189, 189)");
-   }else if (sigma == "dark"){
-       root.style.setProperty("--back", "rgb(26, 26, 26)");
-       root.style.setProperty("--font", "white");
-       root.style.setProperty("--tile", "rgb(40, 40, 40)");
-       document.getElementById("res").innerHTML= "<span id='g' class='material-symbols-outlined'>light_mode</span>";
-       root.style.setProperty("--res", "rgb(230, 230, 230)");
-       root.style.setProperty("--themeicon", "black");
-       root.style.setProperty("--grid", "rgb(43, 43, 43)");
-   }else{
-       console.log("Invalid theme var input")
-   }
- }
- var localskib;
- if(localStorage.getItem('theme')=="1"){var localskib = "dark"}else{var localskib = "light"}
- themeToggle(localskib);
-var dataArr = {};
-window.dataArr = gamelist.sort((a, b) => a.title.localeCompare(b.title));
-
-$("#search").on('keypress keyup change input', function() { 
-    var div = document.getElementById("tilecontainer");
-    var arrival = $(this).val().toLowerCase();
-    div.innerHTML = "";
-    dataArr.filter(function(game) {
-        return (game.title.toLowerCase().indexOf(arrival) !== -1);
-    }).map(function(game) {
-
-        var tile = document.createElement('div');
-        tile.addEventListener('click', function() {location.href = game.link}, false);
-        tile.classList.add("tile");
-        tile.innerHTML = '<img src="'+game.imgSrc+'" alt="placeholder"><p class="sigma">'+game.title+'</p>';
-        div.append(tile);
-         
-    });
-    
-});
-function cloak(game) {
-  var win = window.open();
-  var url = game;
-  var iframe = win.document.createElement('iframe');
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  iframe.style.border = "none";
-  iframe.src = url;
-  win.document.body.style.padding = "0";
-  win.document.body.style.margin = "0";
-  win.document.body.appendChild(iframe);
-
-  // Check if the window is closed within 2 seconds
-  setTimeout(function() {
-    if (win.closed) {
-      showPopup("The about:blank page was closed too quickly. Your school might be blocking this feature. Toggle the About:blank cloak in the bottom right to resolve this issue.\nNote: Securly blocks about blank tabs when a classroom session is active but it wont block them outside of a session or close open tabs when a session is started.");
-    }
-  }, 500);
-}
-
-function showPopup(message) {
-  new Popup({
-    id: "about-blank-warning",
-    title: "Warning",
-    content: message,
-    buttonText: "OK"
-  }).show();
-}
-
-var div = document.getElementById("tilecontainer");
-div.innerHTML = ""; 
-dataArr.forEach(function(game) {
-    var tile = document.createElement('div');
-    tile.addEventListener('click', function() {
-        if (game.link.startsWith('http://') || game.link.startsWith('https://')) {
-          window.open(game.link, '_self');
-        } else {
-          location.href = game.link;
-        }
-    }, false);
-    tile.classList.add("tile");
-    tile.innerHTML = '<img src="'+game.imgSrc+'" alt="placeholder"><p class="sigma">'+game.title+'</p>';
-    div.append(tile);
-});
-
-
-</script>
 <style>
-    :root{
-    --back: rgb(230, 230, 230);
-    --font: black;
-    --tile: rgb(200, 200, 200);
-    --res: white;
-    --themeicon: white;
-    --grid: rgb(189, 189, 189);
-}
-div{
-    border-style: none;
-}
-#feedback-button {
-    position: fixed;
-    right: -55px;
-    top: 40%;
-    transform: rotate(-90deg);
-    z-index: 999;
+  :root{
+    --primary-color: #3d3d3d;
+    --secondary-color: #394c6f;
+    --background-color: #050519;
+    --text-color: #e0e0e0;
+    --accent-color: #6fa8dc;
+    --shadow: 0 4px 24px 0 rgba(0,0,0,0.25);
   }
-  
-  #feedback-button a {
-    display: inline-block;
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    text-decoration: none;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    border-radius: 5px 5px 0 0;
-    transition: all 0.3s ease;
-    height: 50px;
-  }
-  
-  #feedback-button a:hover {
-    background-color: #0056b3;
-    transform: translate(0px,-5px);
-  }
-#ad{
-    align-self: center;
-    background-color: var(--tile);
-    aspect-ratio: 5/1;
-    width: 500px;
+  body{
+    background-color: var(--background-color);
+    font-family: Arial, Helvetica, sans-serif;
     margin: 0;
     padding: 0;
-    position: relative;
-    left: -10px;
-}
-#adtag{
-    background-color: black;
-    width:20px;
-    height:20px;
-    border-bottom-right-radius: 7px;
-}
-body{
-    background-color: var(--back);
-    color: var(--font);
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    justify-content: center;
-    font-family: Arial, Helvetica, sans-serif;
-    width: 100vw;
-    overflow-x: hidden;
+    min-height: 100vh;
+    color: var(--text-color);
+    background-image: radial-gradient(var(--text-color) 1px, transparent 0);
     background-size: 40px 40px;
-    background-image:
-        linear-gradient(to right, var(--grid) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-    background-attachment: fixed;
-    margin: 0;
-    margin: none;
-    padding: 0;
-}
-#switchdiv{
-    position: fixed;
-    bottom:0;
-    right: 0%;
-    background-color: var(--grid);
-    padding: 10px;
-    z-index: 20;
-    width:130px;
-    height: 110px;
-    text-align: center;
-    border-top-left-radius: 50px;
-}
-.switch {
-    position: relative;
-    bottom:0px;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-    z-index:5;
-  }
-  
-  .switch input { 
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  input:checked + .slider {
-    background-color: #2196F3;
-  }
-  
-  input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
-  }
-  
-  input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-  }
-  
-  /* Rounded sliders */
-  .slider.round {
-    border-radius: 34px;
-  }
-  
-  .slider.round:before {
-    border-radius: 50%;
-  }
-.tile{
-    background-color: var(--tile);
-    width: 200px;
-    height:275px;
-    border-radius: 20px;
-    margin: 10px;
+    background-position: -38px -75px;
     display: flex;
     justify-content: center;
+    align-items: center;
+  }
+  .container {
+    background: rgba(40, 40, 60, 0.95);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 40px 32px 32px 32px;
+    display: flex;
     flex-direction: column;
-    scale: 1;
-    transition: transform 0.2s;
-    text-decoration: none;
-    cursor: pointer;
-}
-.tile:hover{
-    transform: scale(1.02);
+    align-items: center;
+    min-width: 350px;
+    max-width: 95vw;
     
-}
-
-img{
-    width: 200px;
-    height: 200px;
-    border-style: none;
-    border-top-right-radius: 20px;
-    border-top-left-radius: 20px;
-    position: relative;
-    top: 0;
-    left: 0;
-}
-.sigma{
-    width: 100%;
-    text-align: center;
-    position: relative;
-    bottom: 5px;
-    font-size: 13pt;
-    height: 75px;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-}
-body{
-    background-color: var(--back);
-    color: var(--font);
+  }
+  .logo-title {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    justify-content: center;
-    font-family: Arial, Helvetica, sans-serif;
-    width: 100vw;
-    overflow-x: hidden;
-}
-element-selector {
-    overflow-x: hidden;
-}
-#res{
-    border-radius: 100%;
-    width: 50px;
-    height: 50px;
-    box-shadow: 0px 0px 10px var(--font);
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background-color: var(--res);
+    align-items: center;
+    margin-bottom: 32px;
+  }
+  .logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.18);
+  }
+  h1 {
+    margin: 0 0 6px 0;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    color: #b0b0b0;
+    font-weight: 400;
+  }
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background: var(--primary-color);
+    border-radius: 100px;
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+    padding: 6px 10px 6px 18px;
+    width: 350px;
+    max-width: 90vw;
+    margin-bottom: 18px;
+  }
+  input[type="text"]{
+    flex: 1;
+    padding: 12px 10px;
     border: none;
-    color: var(--themeicon);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    outline: none;
+    background-color: transparent;
+  }
+  input[type="text"]::placeholder {
+    color: #b0b0b0;
+    opacity: 1;
+    font-style: italic;
+  }
+  button#search{
+    padding: 0 18px;
+    border: none;
+    border-radius: 100px;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    font-size: 1.5rem;
     cursor: pointer;
-}
-#title{
-    font-size: 35pt;
-    position: relative;
-    margin: 10px;
-    width: 100vw;
-    text-align: center;
-
-}
-#sigma{
-    font-size: 25pt;
-    position: relative;
-    margin: 10px;
-    width: 100vw;
-    text-align: center;
-
-}
-#sigma2{
-    font-size: 18pt;
-    position: relative;
-    width: 100vw;
-    text-align: center;
-    padding-bottom: 10px;
-}
-#tilecontainer{
-    width: 100vw;
-    position: relative;
+    transition: background 0.2s;
+    height: 44px;
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
-}
-#tilecontainer h2 {
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #ccc;
-}
-
-.section {
+    box-shadow: none;
+  }
+  button#search:hover, button#search:focus {
+    background: var(--accent-color);
+    color: #222;
+  }
+  .material-symbols-outlined {
+    font-size: 1.7rem;
+    vertical-align: middle;
+  }
+  .quick-links {
+    margin-top: 12px;
+    font-size: 1rem;
+    color: #b0b0b0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-/* Adjust your existing .gametile styles as needed */
-#search{
-    color: var(--font);
-    background-color: var(--tile);
-    border: none;
-    width: 400px;
-    font-size: 13pt;
-    padding: 10px;
-    margin: 20px;
-    outline: none;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-}
-#blob{
-    color: var(--font);
-    background-color: var(--tile);
-    border: none;
-    width: 400px;
-    font-size: 13pt;
-    padding: 10px;
-    margin: 20px;
-    outline: none;
-    border-radius: 10px;
-}
-#download{
-    position: relative;
-    top: -60px;
-    left: 450px;
-    background-color: var(--tile);
-    padding: 10px;
-    border-radius: 10px;
-    user-select: none;
-    padding-left: none;
-    width: 100px;
-    border: none;
-    font-size: 13pt;
-    color: var(--font);
-}
-
-#searchdiv{
     flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: center;
-    position: relative;
-    left: calc(50vw - 250px);
-}
-#m{
-    position: relative;
-    top: 7px;
-    left: -20px;
-    background-color: var(--tile);
-    padding: 8px;
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-    user-select: none;
-    padding-left: none;
-    width: 25px;
-}
-#m:hover{
-    cursor: pointer;
-}
-#back{
-    border-radius: 100%;
-    width: 50px;
-    height: 50px;
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    border: none;
-    color: var(--font);
-    cursor: pointer;
-    background-color: var(--tile);
-}
+    align-items: center;
+    gap: 6px;
+  }
+  .quick-links span {
+    font-weight: 600;
+    color: var(--accent-color);
+    margin-bottom: 2px;
+  }
+  .quick-links a {
+    color: var(--accent-color);
+    text-decoration: none;
+    margin: 0 8px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .quick-links a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+  @media (max-width: 500px) {
+    .container {
+      padding: 18px 4vw 18px 4vw;
+      min-width: unset;
+    }
+    .search-bar {
+      width: 95vw;
+      padding: 4px 4px 4px 10px;
+    }
+    input[type="text"] {
+      font-size: 1rem;
+    }
+  }
 </style>
--->
+<script>
+  // Helper to proxy a URL via the parent window
+  function proxyNavigate(url) {
+    if (window.parent && window.parent !== window) {
+      window.parent.document.getElementById('url').textContent = url;
+      const event = new KeyboardEvent('keydown', { key: 'Enter' });
+      window.parent.document.getElementById('url').dispatchEvent(event);
+    } else {
+      window.location.href = url;
+    }
+  }
+
+  // Handle search submit (proxy search or URL)
+  document.getElementById('search-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const val = document.getElementById('q').value.trim();
+    document.getElementById('q').blur();
+
+    // Simple URL check
+    let url;
+    if (/^(https?:\/\/|ppfn:\/\/)/i.test(val)) {
+      url = val;
+    } else if (/^[\w-]+\.[\w-]+/.test(val)) {
+      url = 'https://' + val;
+    } else {
+      url = 'https://duckduckgo.com/?q=' + encodeURIComponent(val) + '&ia=web';
+    }
+    proxyNavigate(url);
+  });
+
+  document.getElementById('google-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    proxyNavigate('https://www.google.com/');
+  });
+  document.getElementById('youtube-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    proxyNavigate('https://www.youtube.com/');
+  });
+  window.parent.document.getElementById('url').textContent = "ppfn://home";
+</script>
