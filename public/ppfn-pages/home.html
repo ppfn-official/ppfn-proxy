@@ -28,16 +28,20 @@
 </body>
 </html>
 <style>
-  :root{
-    --primary-color: #3d3d3d;
-    --secondary-color: #394c6f;
-    --background-color: #050519;
-    --text-color: #e0e0e0;
-    --accent-color: #6fa8dc;
-    --shadow: 0 4px 24px 0 rgba(0,0,0,0.25);
+  :root {
+    --primary-bg: #1c1c25;
+    --nav-bg: #191936;
+    --accent-bg: #4c4c66;
+    --text-color: #c9c9eb;
+    --spinner-bg: rgba(28,28,37,0.7);
+    --hover-bg: #2d2d3d;
+    --settings-panel-bg: #191936;
+    --settings-overlay-bg: rgba(0,0,0,0.5);
+    --border-color: #4c4c66;
   }
-  body{
-    background-color: var(--background-color);
+  body {
+    /* Make the background much darker than --primary-bg */
+    background-color: #0a0a10;
     font-family: Arial, Helvetica, sans-serif;
     margin: 0;
     padding: 0;
@@ -51,16 +55,15 @@
     align-items: center;
   }
   .container {
-    background: rgba(40, 40, 60, 0.95);
+    background: var(--nav-bg);
     border-radius: 24px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.25);
     padding: 40px 32px 32px 32px;
     display: flex;
     flex-direction: column;
     align-items: center;
     min-width: 350px;
     max-width: 95vw;
-    
   }
   .logo-title {
     display: flex;
@@ -79,7 +82,7 @@
     margin: 0 0 6px 0;
     font-size: 2.2rem;
     font-weight: 700;
-    color: var(--accent-color);
+    color: var(--accent-bg);
     letter-spacing: 1px;
   }
   .subtitle {
@@ -91,7 +94,7 @@
   .search-bar {
     display: flex;
     align-items: center;
-    background: var(--primary-color);
+    background: var(--primary-bg);
     border-radius: 100px;
     box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
     padding: 6px 10px 6px 18px;
@@ -119,7 +122,7 @@
     padding: 0 18px;
     border: none;
     border-radius: 100px;
-    background-color: var(--secondary-color);
+    background-color: var(--nav-bg);
     color: var(--text-color);
     font-size: 1.5rem;
     cursor: pointer;
@@ -131,7 +134,7 @@
     box-shadow: none;
   }
   button#search:hover, button#search:focus {
-    background: var(--accent-color);
+    background: var(--accent-bg);
     color: #222;
   }
   .material-symbols-outlined {
@@ -149,11 +152,11 @@
   }
   .quick-links span {
     font-weight: 600;
-    color: var(--accent-color);
+    color: var(--accent-bg);
     margin-bottom: 2px;
   }
   .quick-links a {
-    color: var(--accent-color);
+    color: var(--accent-bg);
     text-decoration: none;
     margin: 0 8px;
     font-weight: 500;
@@ -178,42 +181,113 @@
   }
 </style>
 <script>
-  // Helper to proxy a URL via the parent window
-  function proxyNavigate(url) {
-    if (window.parent && window.parent !== window) {
-      window.parent.document.getElementById('url').textContent = url;
-      const event = new KeyboardEvent('keydown', { key: 'Enter' });
-      window.parent.document.getElementById('url').dispatchEvent(event);
-    } else {
-      window.location.href = url;
-    }
+// Try to sync theme from parent if available
+(function syncThemeFromParent() {
+  function applyThemeFromParent() {
+    try {
+      if (window.parent && window.parent !== window) {
+        const root = document.documentElement;
+        const parentStyles = window.parent.getComputedStyle(window.parent.document.documentElement);
+        [
+          '--primary-bg',
+          '--nav-bg',
+          '--accent-bg',
+          '--text-color',
+          '--spinner-bg',
+          '--hover-bg',
+          '--settings-panel-bg',
+          '--settings-overlay-bg',
+          '--border-color'
+        ].forEach(varName => {
+          const val = parentStyles.getPropertyValue(varName);
+          if (val) root.style.setProperty(varName, val);
+        });
+        // Make background even darker than --primary-bg
+        const parentPrimary = parentStyles.getPropertyValue('--primary-bg').trim();
+        if (parentPrimary) {
+          function darkenColor(color, amount) {
+            let r, g, b;
+            if (color.startsWith('hsl')) {
+              const hsl = color.match(/(\d+),\s*(\d+)%?,\s*(\d+)%?/);
+              if (hsl) {
+                let h = +hsl[1], s = +hsl[2], l = +hsl[3];
+                l = Math.max(0, l - amount);
+                return `hsl(${h},${s}%,${l}%)`;
+              }
+            } else if (color.startsWith('#')) {
+              color = color.replace('#','');
+              if (color.length === 3) color = color.split('').map(x=>x+x).join('');
+              r = parseInt(color.substr(0,2),16);
+              g = parseInt(color.substr(2,2),16);
+              b = parseInt(color.substr(4,2),16);
+            } else if (color.startsWith('rgb')) {
+              const rgb = color.match(/(\d+),\s*(\d+),\s*(\d+)/);
+              if (rgb) {
+                r = +rgb[1]; g = +rgb[2]; b = +rgb[3];
+              }
+            }
+            if (typeof r !== "undefined") {
+              r = Math.max(0, r - amount*2);
+              g = Math.max(0, g - amount*2);
+              b = Math.max(0, b - amount*2);
+              return `rgb(${r},${g},${b})`;
+            }
+            return color;
+          }
+          root.style.setProperty('background-color', darkenColor(parentPrimary, 25));
+          document.body.style.backgroundColor = darkenColor(parentPrimary, 25);
+        }
+      }
+    } catch (e) {}
   }
+  // Initial sync
+  applyThemeFromParent();
 
-  // Handle search submit (proxy search or URL)
-  document.getElementById('search-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const val = document.getElementById('q').value.trim();
-    document.getElementById('q').blur();
-
-    // Simple URL check
-    let url;
-    if (/^(https?:\/\/|ppfn:\/\/)/i.test(val)) {
-      url = val;
-    } else if (/^[\w-]+\.[\w-]+/.test(val)) {
-      url = 'https://' + val;
-    } else {
-      url = 'https://duckduckgo.com/?q=' + encodeURIComponent(val) + '&ia=web';
+  // Listen for theme changes from parent via postMessage
+  window.addEventListener('message', function(event) {
+    if (event && event.data && event.data.type === 'ppfn-theme-update') {
+      applyThemeFromParent();
     }
-    proxyNavigate(url);
   });
+})();
+</script>
+<script>
+// Helper to proxy a URL via the parent window
+function proxyNavigate(url) {
+  if (window.parent && window.parent !== window) {
+    window.parent.document.getElementById('url').textContent = url;
+    const event = new KeyboardEvent('keydown', { key: 'Enter' });
+    window.parent.document.getElementById('url').dispatchEvent(event);
+  } else {
+    window.location.href = url;
+  }
+}
 
-  document.getElementById('google-link').addEventListener('click', function(e) {
-    e.preventDefault();
-    proxyNavigate('https://www.google.com/');
-  });
-  document.getElementById('youtube-link').addEventListener('click', function(e) {
-    e.preventDefault();
-    proxyNavigate('https://www.youtube.com/');
-  });
-  window.parent.document.getElementById('url').textContent = "ppfn://home";
+// Handle search submit (proxy search or URL)
+document.getElementById('search-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const val = document.getElementById('q').value.trim();
+  document.getElementById('q').blur();
+
+  // Simple URL check
+  let url;
+  if (/^(https?:\/\/|ppfn:\/\/)/i.test(val)) {
+    url = val;
+  } else if (/^[\w-]+\.[\w-]+/.test(val)) {
+    url = 'https://' + val;
+  } else {
+    url = 'https://duckduckgo.com/?q=' + encodeURIComponent(val) + '&ia=web';
+  }
+  proxyNavigate(url);
+});
+
+document.getElementById('google-link').addEventListener('click', function(e) {
+  e.preventDefault();
+  proxyNavigate('https://www.google.com/');
+});
+document.getElementById('youtube-link').addEventListener('click', function(e) {
+  e.preventDefault();
+  proxyNavigate('https://www.youtube.com/');
+});
+window.parent.document.getElementById('url').textContent = "ppfn://home";
 </script>
