@@ -96,19 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 let transportMode = localStorage.getItem('ppfn-transport-mode') || "epoxy"; // Default to epoxy
 
-function updateTransportButtons() {
-    const bareBtn = document.getElementById('bare-btn');
-    const epoxyBtn = document.getElementById('epoxy-btn');
-    if (!bareBtn || !epoxyBtn) return;
-    if (transportMode === "bare") {
-        bareBtn.classList.add('active');
-        epoxyBtn.classList.remove('active');
-    } else {
-        epoxyBtn.classList.add('active');
-        bareBtn.classList.remove('active');
-    }
-}
-
+// Only allow Epoxy (remove Bare button logic)
 document.addEventListener('DOMContentLoaded', function() {
     window.baremuxConnection = null;
 
@@ -128,27 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideSpinner() {
         loadingSpinner.style.display = 'none';
     }
-    // Add this block to handle transport switching
-    const bareBtn = document.getElementById('bare-btn');
-    const epoxyBtn = document.getElementById('epoxy-btn');
-    if (bareBtn && epoxyBtn) {
-        bareBtn.addEventListener('click', function() {
-            transportMode = "bare";
-            localStorage.setItem('ppfn-transport-mode', "bare");
-            updateTransportButtons();
-            window.baremuxConnection = null; // Reset connection so new transport is used
-            console.log("Transport mode set to Bare");
-        });
-        epoxyBtn.addEventListener('click', function() {
-            transportMode = "epoxy";
-            localStorage.setItem('ppfn-transport-mode', "epoxy");
-            updateTransportButtons();
-            window.baremuxConnection = null; // Reset connection so new transport is used
-            console.log("Transport mode set to Epoxy");
-        });
-        updateTransportButtons();
-    }
-// Save the original getter and setter
+    // Save the original getter and setter
 const originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
 Object.defineProperty(iframe, 'src', {
     get() {
@@ -177,19 +145,6 @@ Object.defineProperty(iframe, 'src', {
         setTimeout(hideSpinner, 500); // Give UV time to send dom-ready
     });
 
-    iframe.addEventListener('load', () => {
-    try {
-        // Access the iframe's current location
-        const newSrc = iframe.contentWindow.location.href;
-
-        // Update the iframe's src attribute if it has changed
-        if (iframe.src !== newSrc) {
-            iframe.src = newSrc;
-        }
-    } catch (e) {
-        console.error("Error accessing iframe location:", e);
-    }
-});
     // --- BEGIN: Periodically update URL bar from iframe ---
     let urlBarFocused = false;
     if (urlDiv) {
@@ -208,10 +163,7 @@ Object.defineProperty(iframe, 'src', {
             if (idx !== -1) {
                 // Get the encoded part after /uv/service/
                 let encoded = src.slice(idx + prefix.length);
-                // Do NOT split the encoded string; use the full string after the prefix
-                // encoded = encoded.split(/[/?#]/)[0];
                 if (encoded) {
-                    // Decode using decodeURIComponent(atob(encoded))
                     let decoded;
                     try {
                         decoded = window.__uv$config.decodeUrl(encoded);
@@ -223,26 +175,24 @@ Object.defineProperty(iframe, 'src', {
                     }
                 }
             }
-        } catch (e) {
-        }
+        } catch (e) {}
     }, 500);
+
     if (urlDiv) {
-    urlDiv.addEventListener('mousedown', function(e) {
-        // Only select all if not already focused
-        if (document.activeElement !== urlDiv) {
-            e.preventDefault(); // Prevent default to avoid moving cursor
-            // Focus and select all
-            urlDiv.focus();
-            const range = document.createRange();
-            range.selectNodeContents(urlDiv);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        }
-    });
-}
+        urlDiv.addEventListener('mousedown', function(e) {
+            if (document.activeElement !== urlDiv) {
+                e.preventDefault();
+                urlDiv.focus();
+                const range = document.createRange();
+                range.selectNodeContents(urlDiv);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        });
+    }
     // --- END: Periodically update URL bar from iframe ---
-// great white whales just rlease
+
     if (urlDiv) {
         urlDiv.addEventListener('input', function() {
             if (window.DOMPurify) {
@@ -253,7 +203,6 @@ Object.defineProperty(iframe, 'src', {
             }
         });
 
-        // L/ Ignore errorsoad page on Enter
         urlDiv.addEventListener('keydown', async function(event) {
             if (event.key === "Enter" && urlDiv.textContent !== "") {
                 event.preventDefault();
@@ -264,7 +213,6 @@ Object.defineProperty(iframe, 'src', {
                 if (url.startsWith("ppfn://")) {
                     const pageName = url.slice("ppfn://".length).trim();
                     if (pageName) {
-                        // Sanitize pageName to prevent directory traversal
                         const safePageName = pageName.replace(/[^a-zA-Z0-9_-]/g, "");
                         iframe.src = `/ppfn-pages/${safePageName}.html`;
                     }
@@ -277,24 +225,32 @@ Object.defineProperty(iframe, 'src', {
                     url = "https://" + url;
                 }
 
-                // Always use selected transport
-                if (!window.baremuxConnection) {
-                    window.baremuxConnection = new BareMux.BareMuxConnection("/baremux/worker.js");
-                    const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
-                    if (transportMode === "epoxy") {
-                        console.log("Using Epoxy transport");
-                        await window.baremuxConnection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
-                    } else {
-                        console.log("Using Bare transport");
-                        await window.baremuxConnection.setTransport("/bare/index.mjs", [{ wisp: wispUrl }]);
+                async function setupTransport() {
+                    if (!window.baremuxConnection) {
+                        window.baremuxConnection = new BareMux.BareMuxConnection("/baremux/worker.js");
+                        const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+                        try {
+                            await window.baremuxConnection.setTransport("/baremux/index.mjs", [{ wisp: wispUrl }]);
+                        } catch (bareErr) {
+                            try {
+                                await window.baremuxConnection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+                            } catch (epoxyErr) {
+                                alert("Both proxy transports failed. Please try again later.");
+                                window.baremuxConnection = null;
+                                return false;
+                            }
+                        }
                     }
+                    return true;
                 }
+
+                const ok = await setupTransport();
+                if (!ok) return;
+
                 try {
                     const encodedUrl = __uv$config.encodeUrl(url);
                     iframe.src = __uv$config.prefix + encodedUrl;
-                } catch (e) {
-                    console.error("Error encoding URL:", e);
-                }
+                } catch (e) {}
             }
         });
     }
@@ -319,7 +275,6 @@ Object.defineProperty(iframe, 'src', {
 
     // Navigation buttons for iframe history
     if (backBtn) {
-
         backBtn.addEventListener('click', function() {
             window.history.back();
         });
@@ -332,7 +287,7 @@ Object.defineProperty(iframe, 'src', {
     if (homeBtn) {
         homeBtn.addEventListener('click', function() {
             urlDiv.textContent = "ppfn://home";
-            iframe.src = `${window.location}/ppfn-pages/home.html`;
+            iframe.src = `/ppfn-pages/home.html`;
         });
     }
     if (reloadBtn) {
@@ -343,7 +298,6 @@ Object.defineProperty(iframe, 'src', {
     if (openNewBtn) {
         openNewBtn.addEventListener('click', async function() {
             if (!urlDiv.textContent.trim().includes("ppfn://")) {
-                // Get the current URL from the URL bar
                 const rawUrl = urlDiv.textContent.trim();
                 let url = rawUrl;
                 if (!url.includes(".")) {
@@ -351,28 +305,22 @@ Object.defineProperty(iframe, 'src', {
                 } else if (!url.startsWith("http://") && !url.startsWith("https://")) {
                     url = "https://" + url;
                 }
-                // Open the proxied URL in a new tab (fullscreen, no iframe)
                 const proxiedUrl = __uv$config.prefix + __uv$config.encodeUrl(url);
-                
                 window.open(proxiedUrl, '_blank');
             }
-           
         });
     }
-    
-        // Access the iframe's current location
-        const newSrc = iframe.contentWindow.location.href;
 
-        // Update the iframe's src attribute if it has changed
-        if (iframe.src !== newSrc) {
-            iframe.src = newSrc;
-        }
-        if (iframe.src === "about:blank" || iframe.src === "" || iframe.src === undefined || iframe.src === null || iframe.src === "data:text/html,about:blank") {
-                    urlDiv.textContent = "ppfn://home";
-                    iframe.src = `${window.location}/ppfn-pages/home.html`;
-                    urlDiv.blur(); // Unfocus the URL bar
-        }
-
+    // Set home page if iframe is blank
+    if (
+        iframe.src === "about:blank" ||
+        !iframe.src ||
+        iframe.src === "data:text/html,about:blank"
+    ) {
+        urlDiv.textContent = "ppfn://home";
+        iframe.src = `/ppfn-pages/home.html`;
+        urlDiv.blur();
+    }
 
 });
 function resetOverflowPosition(element) {
