@@ -1,15 +1,18 @@
 import express from "express";
 import { createServer } from "node:http";
+import { publicPath } from "ultraviolet-static";
 import { uvPath } from "@titaniumnetwork-dev/ultraviolet";
 import { epoxyPath } from "@mercuryworkshop/epoxy-transport";
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 import { join } from "node:path";
 import { hostname } from "node:os";
 import wisp from "wisp-server-node"
-import { spawn } from "node:child_process";
 
-const publicPath = join(import.meta.dirname, "public");
 const app = express();
+
+// Serve your own /public directory first
+app.use(express.static(join(process.cwd(), "public")));
+
 // Load our publicPath first and prioritize it over UV.
 app.use(express.static(publicPath));
 // Load vendor files last.

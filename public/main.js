@@ -94,7 +94,20 @@ document.addEventListener('DOMContentLoaded', function() {
         Array.from(document.getElementById('theme-presets').children).forEach(c => c.style.boxShadow = "0 0 0 2px transparent");
     });
 });
-let transportMode = "epoxy"; // Always use Epoxy
+let transportMode = localStorage.getItem('ppfn-transport-mode') || "epoxy"; // Default to epoxy
+
+function updateTransportButtons() {
+    const bareBtn = document.getElementById('bare-btn');
+    const epoxyBtn = document.getElementById('epoxy-btn');
+    if (!bareBtn || !epoxyBtn) return;
+    if (transportMode === "bare") {
+        bareBtn.classList.add('active');
+        epoxyBtn.classList.remove('active');
+    } else {
+        epoxyBtn.classList.add('active');
+        bareBtn.classList.remove('active');
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     window.baremuxConnection = null;
@@ -115,7 +128,26 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideSpinner() {
         loadingSpinner.style.display = 'none';
     }
-
+    // Add this block to handle transport switching
+    const bareBtn = document.getElementById('bare-btn');
+    const epoxyBtn = document.getElementById('epoxy-btn');
+    if (bareBtn && epoxyBtn) {
+        bareBtn.addEventListener('click', function() {
+            transportMode = "bare";
+            localStorage.setItem('ppfn-transport-mode', "bare");
+            updateTransportButtons();
+            window.baremuxConnection = null; // Reset connection so new transport is used
+            console.log("Transport mode set to Bare");
+        });
+        epoxyBtn.addEventListener('click', function() {
+            transportMode = "epoxy";
+            localStorage.setItem('ppfn-transport-mode', "epoxy");
+            updateTransportButtons();
+            window.baremuxConnection = null; // Reset connection so new transport is used
+            console.log("Transport mode set to Epoxy");
+        });
+        updateTransportButtons();
+    }
 // Save the original getter and setter
 const originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
 Object.defineProperty(iframe, 'src', {
@@ -245,11 +277,17 @@ Object.defineProperty(iframe, 'src', {
                     url = "https://" + url;
                 }
 
-                // Always use Epoxy transport
+                // Always use selected transport
                 if (!window.baremuxConnection) {
                     window.baremuxConnection = new BareMux.BareMuxConnection("/baremux/worker.js");
                     const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
-                    await window.baremuxConnection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+                    if (transportMode === "epoxy") {
+                        console.log("Using Epoxy transport");
+                        await window.baremuxConnection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+                    } else {
+                        console.log("Using Bare transport");
+                        await window.baremuxConnection.setTransport("/bare/index.mjs", [{ wisp: wispUrl }]);
+                    }
                 }
                 try {
                     const encodedUrl = __uv$config.encodeUrl(url);
