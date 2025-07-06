@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PPFN-Unblocker</title>
   <link rel="stylesheet" href="style.css">
   <link rel="shortcut icon" href="https://raw.githubusercontent.com/ppfn-official/ppfn/refs/heads/MAIN/ppfn.png" type="image/png">
@@ -17,13 +18,13 @@
     <img id="logo" src="https://raw.githubusercontent.com/ppfn-official/ppfn/refs/heads/MAIN/ppfn.png" alt="PPFN Logo">
     <b id="ppfn-txt">PPFN</b>
     <p id="unblocker-txt">Unblocker</p>
-    <div id="home"><span class="material-symbols-outlined">home</span></div>
-    <div id="reload"><span class="material-symbols-outlined">refresh</span></div>
-    <div id="back"><span class="material-symbols-outlined">arrow_back</span></div>
-    <div id="forward"><span class="material-symbols-outlined">arrow_forward</span></div>
-    <div id="url" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="off" aria-autocomplete="none"></div>
-    <div id="open_new"><span class="material-symbols-outlined">open_in_new</span></div>
-    <div id="settings" style="padding-right: 10px;">
+    <div id="home" class="navb"><span class="material-symbols-outlined">home</span></div>
+    <div id="reload"class="navb"><span class="material-symbols-outlined">refresh</span></div>
+    <div id="back"class="navb"><span class="material-symbols-outlined">arrow_back</span></div>
+    <div id="forward"class="navb"><span class="material-symbols-outlined">arrow_forward</span></div>
+    <div id="url" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="off" aria-autocomplete="none" ></div>
+    <div id="open_new"class="navb"><span class="material-symbols-outlined">open_in_new</span></div>
+    <div id="settings"class="navb" style="padding-right: 20px;">
       <span class="material-symbols-outlined">settings</span>
     </div>
     <script>
@@ -40,7 +41,7 @@
         <span id="close-settings" class="material-symbols-outlined">close</span>
         
         <!-- Tab Cloaking -->
-        <div class="settingscontainer" style="margin-top:22%;">
+        <div class="settingscontainer" style="margin-top:200px;">
           <!-- Theme Section -->
           <label style="font-size:1.2em; margin-bottom: 6px;">Theme:</label>
           <div id="theme-presets" style="display: flex; gap: 16px; align-items: center;"></div>
@@ -56,10 +57,10 @@
           <p style="margin:0;">Change the tab title and icon to look like a school site.</p>
           <div style="display:flex;gap:10px;">
             <button class="option" onclick="ppfnTabCloak('Google Drive','https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png')"><img src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" alt="Drive"></button>
-            <button class="option" onclick="ppfnTabCloak('Google Docs','/assets/img/docs.webp')"><img src="/assets/img/docs.webp" alt="Docs"></button>
+            <button class="option" onclick="ppfnTabCloak('Google Docs','/assets/img/docs.png')"><img src="/assets/img/docs.png" alt="Docs"></button>
             <button class="option" onclick="ppfnTabCloak('Google','https://www.google.com/favicon.ico')"><img src="https://www.google.com/favicon.ico" alt="Google"></button>
             <button class="option" onclick="ppfnTabCloak('Google Classroom','https://www.gstatic.com/classroom/logo_square_rounded.svg')"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" style="width:30px;height:30px;" alt="Classroom"></button>
-            <button class="option" onclick="ppfnResetTabCloak()"><img src="/assets/img/none.webp" style="width:30px;height:30px;" alt="None"></button>
+            <button class="option" onclick="ppfnResetTabCloak()"><img src="https://raw.githubusercontent.com/ppfn-official/ppfn/refs/heads/MAIN/ppfn.png" style="width:30px;height:30px;" alt="None"></button>
           </div>
         </div>
         <!-- About:Blank Cloak -->

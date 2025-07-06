@@ -14,7 +14,6 @@ function getAccentColor(primaryHex) {
     const [h, s, l] = hexToHSL(primaryHex);
     return `hsl(${h}, ${s}%, ${Math.min(l+20,95)}%)`;
 }
-
 // Render theme circles
 function renderThemePresets() {
     const container = document.getElementById('theme-presets');
@@ -466,7 +465,7 @@ function ppfnDisableClickoff() {
 }
 function ppfnClickoffHandler() {
     if (clickoffEnabled) {
-        ppfnTabCloak("Google Docs", "/assets/img/docs.webp");
+        ppfnTabCloak("Google Docs", "/assets/img/docs.png");
     }
 }
 
@@ -532,4 +531,31 @@ window.addEventListener('message', function(event) {
             iframe.src = newSrc;
         }
     }
+});
+// Add event listener for expanding url bar if too small
+document.addEventListener('DOMContentLoaded', function() {
+    const urlDiv = document.getElementById('url');
+    if (!urlDiv) return;
+    urlDiv.addEventListener('focus', function() {
+        if (urlDiv.offsetWidth < 150) {
+            const navBtns = Array.from(document.querySelectorAll('.navb, #ppfn-txt, #unblocker-txt'));
+            navBtns.forEach(btn => btn.style.display = 'none');
+            urlDiv.style.flex = "1 1 100%";
+            urlDiv.style.width = "100vw";
+            urlDiv.style.marginLeft = "20px";
+            urlDiv.style.marginRight = "20px";
+            urlDiv.classList.add('expanded-urlbar');
+
+            function restoreNavBtns() {
+                navBtns.forEach(btn => btn.style.display = '');
+                urlDiv.style.flex = "";
+                urlDiv.style.width = "";
+                urlDiv.style.marginLeft = "";
+                urlDiv.style.marginRight = "";
+                urlDiv.classList.remove('expanded-urlbar');
+                urlDiv.removeEventListener('blur', restoreNavBtns);
+            }
+            urlDiv.addEventListener('blur', restoreNavBtns);
+        }
+    });
 });

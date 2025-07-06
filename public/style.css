@@ -8,6 +8,9 @@
     --settings-panel-bg: rgb(25, 25, 54);
     --settings-overlay-bg: rgba(0,0,0,0.5);
     --border-color: rgb(76, 76, 102);
+    --sb-track-color: #ffffff00;
+    --sb-thumb-color: var(--accent-bg);
+    --sb-size: 4px;
 }
 
 #logo{
@@ -38,6 +41,15 @@ body{
     top: 0;
     left: 0;
     z-index: 100;
+}
+.navb{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 6vh;
+    height: 6vh;
+    border-radius: 100px;
+    cursor: pointer;
 }
 #ppfn-txt{
     font-size: 4vh;
@@ -76,7 +88,7 @@ body{
 @media only screen and (min-width: 1200px) {#ppfn-txt, #unblocker-txt{
     display: inherit;
 }}
-#url{
+#url {
     height: 50%;
     background-color: var(--accent-bg);
     width: 100%;
@@ -93,28 +105,32 @@ body{
     font-size: 2vh;
     color: var(--text-color);
     justify-content: left;
-     line-break: none;
-     white-space: nowrap;
-     text-overflow: ellipsis;
-     cursor: text;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: text;
+}
+#url:focus {
+    background-color: var(--accent-bg);
+    color: var(--text-color) !important;
+    border-color: var(--accent-bg);
+    outline: none;
 }
 .material-symbols-outlined{
     
     border-radius: 100px;
     padding: 20%;
     cursor: pointer;
-    scale: 1;
     color: var(--text-color);
-    font-size: 3vh;
+    font-size: 2.75vh !important;
 }
 .material-symbols-outlined:hover{
     
     border-radius: 100px;
     padding: 20%;
     cursor: pointer;
-    scale: 1;
     color: var(--text-color);
     background-color: var(--hover-bg);
+    font-size: 2.75vh !important;
 }
 #settings-popup.hidden {
     display: none;
@@ -191,10 +207,11 @@ div{
     align-items: center;
     justify-content: center;
 }
-#url.focused {
+#url.focused, #url.expanded-urlbar {
     overflow-x: auto;
     text-overflow: unset;
     white-space: pre;
+    color: var(--text-color);
 }
 
 /* Settings menu button styling */
@@ -261,4 +278,36 @@ div{
     display: flex;
     gap: 16px;
     align-items: center;
+}
+
+
+::-webkit-scrollbar {
+  width: var(--sb-size)
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 20px;
+  
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  body {
+    scrollbar-color: var(--sb-thumb-color)
+                     var(--sb-track-color);
+  }
+}
+
+#url,
+#url.expanded-urlbar {
+    transition:
+        width 0.18s cubic-bezier(.4,1.6,.5,1),
+        flex 0.18s cubic-bezier(.4,1.6,.5,1),
+        margin-left 0.18s cubic-bezier(.4,1.6,.5,1),
+        margin-right 0.18s cubic-bezier(.4,1.6,.5,1);
 }
