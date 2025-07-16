@@ -5,3 +5,5 @@ build/
 .env
 .DS_Store
 *.log
+public-originals/
+package-lock.json
