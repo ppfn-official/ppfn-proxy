@@ -99,7 +99,7 @@
         </circle>
       </svg>
     </div>
-    <iframe id="site-frame" style="width:100vw; height:95vh; border:none; background:rgb(28,28,37);"></iframe>
+    <iframe id="site-frame" style="width:100vw; height:100%; border:none; background:rgb(28,28,37);"></iframe>
   </main>
 </body>
 </html>
@@ -141,7 +141,7 @@ body{
 }
 #nav{
     width: 100vw;
-    height: 6vh;
+    height: 50px;
     background-color: var(--nav-bg);
     display: flex;
     align-items: center;
@@ -163,13 +163,13 @@ body{
     cursor: pointer;
 }
 #ppfn-txt{
-    font-size: 4vh;
+    font-size: 200%;
     padding-top: 100%;
     padding-bottom: 100%;
     user-select: none;
 }
 #unblocker-txt{
-    font-size: 2.5vh;
+    font-size:150%;
     user-select: none;
 
 }
@@ -213,7 +213,7 @@ body{
     border: solid;
     border-width: 5px;
     border-color: var(--accent-bg);
-    font-size: 2vh;
+    font-size: 110%;
     color: var(--text-color);
     justify-content: left;
     white-space: nowrap;
@@ -232,7 +232,7 @@ body{
     padding: 20%;
     cursor: pointer;
     color: var(--text-color);
-    font-size: 2.75vh !important;
+    font-size: 150% !important;
 }
 .material-symbols-outlined:hover{
     
@@ -241,7 +241,7 @@ body{
     cursor: pointer;
     color: var(--text-color);
     background-color: var(--hover-bg);
-    font-size: 2.75vh !important;
+    font-size: 150% !important;
 }
 #settings-popup.hidden {
     display: none;
@@ -295,7 +295,7 @@ body{
 }
 #content{
     width: 100vw;
-    height: 94vh;
+    height: calc(100vh - 50px);
     background-color: var(--primary-bg);
     display: flex;
     align-items: center;
